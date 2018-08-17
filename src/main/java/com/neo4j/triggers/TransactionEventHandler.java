@@ -11,8 +11,8 @@ import org.neo4j.kernel.lifecycle.Lifecycle;
 import org.neo4j.kernel.lifecycle.LifecycleAdapter;
 import org.neo4j.logging.Log;
 
-public class RegisterTransactionEventHandlerExtensionFactory
-		extends KernelExtensionFactory<RegisterTransactionEventHandlerExtensionFactory.Dependencies> {
+public class TransactionEventHandler
+		extends KernelExtensionFactory<TransactionEventHandler.Dependencies> {
 	private Log logger;
 
 	interface Dependencies {
@@ -20,8 +20,8 @@ public class RegisterTransactionEventHandlerExtensionFactory
 		LogService log();
 	}
 
-	public RegisterTransactionEventHandlerExtensionFactory() {
-		super("registerTransactionEventHandler");
+	public TransactionEventHandler() {
+		super("Custom_TransactionEventHandler");
 		this.logger = null;
 	}
 
@@ -34,7 +34,7 @@ public class RegisterTransactionEventHandlerExtensionFactory
 	            
 	            @Override
 	            public void start() {
-	                System.out.println("STARTING trigger watcher");
+	                System.out.println("TransactionEventHandler: newInstance created");
 	                executor = Executors.newFixedThreadPool(2);
 	                handler = new CustomTransactionHandler(dependencies.getGraphDatabaseService(), executor, log);
 	                dependencies.getGraphDatabaseService().registerTransactionEventHandler(handler);
@@ -42,7 +42,7 @@ public class RegisterTransactionEventHandlerExtensionFactory
 
 	            @Override
 	            public void shutdown() {
-	                System.out.println("STOPPING trigger watcher");
+	            	System.out.println("TransactionEventHandler: newInstance shutdown");
 	                executor.shutdown();
 	                dependencies.getGraphDatabaseService().unregisterTransactionEventHandler(handler);
 	            }

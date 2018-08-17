@@ -8,15 +8,14 @@ import org.neo4j.graphdb.event.TransactionEventHandler;
 import org.neo4j.kernel.impl.logging.LogService;
 
 public class CustomTransactionHandler implements TransactionEventHandler{
-
 	public static GraphDatabaseService db;
     private static ExecutorService ex;
-    public static LogService logsvc;
+    public static LogService logs;
 
-    public CustomTransactionHandler(GraphDatabaseService graphDatabaseService, ExecutorService executor, LogService logsvc) {
-        db = graphDatabaseService;
-        ex = executor;
-        this.logsvc = logsvc;
+    public CustomTransactionHandler(GraphDatabaseService graphDatabaseService, ExecutorService executor, LogService logs) {
+        this.db = graphDatabaseService;
+        this.ex = executor;
+        this.logs = logs;
     }
 
     @Override
@@ -26,7 +25,14 @@ public class CustomTransactionHandler implements TransactionEventHandler{
 
     @Override
     public void afterCommit(TransactionData transactionData, Object o) {
-        ex.submit(new EventProcess(transactionData, db, logsvc));
+    	if(transactionData.createdNodes().iterator().hasNext()) {
+    		ex.submit(new CreateTriggerProcess(transactionData, db, logs));	
+    	}else if(transactionData.deletedNodes().iterator().hasNext()) {
+    		ex.submit(new DeleteTriggerProcess(transactionData, db, logs));
+    	}else {
+    		ex.submit(new OthersTriggerProcess(transactionData, db, logs));
+    	}
+        
     }
 
     @Override
